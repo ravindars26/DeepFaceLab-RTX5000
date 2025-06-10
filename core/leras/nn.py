@@ -87,7 +87,7 @@ class nn():
             # Disable tensorflow warnings
             tf_logger = logging.getLogger('tensorflow')
             tf_logger.setLevel(logging.ERROR)
-            
+
             if tf_version[0] == '2':
                 tf.disable_v2_behavior()
             nn.tf = tf
@@ -112,6 +112,7 @@ class nn():
                 
             config.gpu_options.force_gpu_compatible = True
             config.gpu_options.allow_growth = True
+            config.gpu_options.per_process_gpu_memory_fraction = 0.95 / device_config.num_gpu_sessions
             nn.tf_sess_config = config
             
         if nn.tf_sess is None:
@@ -256,6 +257,17 @@ class nn():
 
         return choosed_idxs
 
+    @staticmethod
+    def ask_multiple_sessions():
+        num_sessions = io.input_int(f"Number of GPU sessions", 1,
+                                    help_message="DeepFaceLab-RTX5000 Feature: Creates multiple sessions for every selected GPU.\n"
+                                                "If you notice the script using only fraction of available performance, try increasing this number to run more instances in parallel.\n "
+                                                "Note that each session takes equal part of VRAM so if you create too many sessions, you might run into OOM errors.")
+        if num_sessions < 1:
+            num_sessions = 1
+
+        return num_sessions
+
     class DeviceConfig():
         @staticmethod
         def ask_choose_device(*args, **kwargs):
@@ -269,6 +281,7 @@ class nn():
 
             self.devices = devices
             self.cpu_only = len(devices) == 0
+            self.num_gpu_sessions = 1
 
         @staticmethod
         def BestGPU():

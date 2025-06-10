@@ -47,10 +47,12 @@ class ExtractSubprocessor(Subprocessor):
             self.jpeg_quality         = client_dict['jpeg_quality']
             self.face_type            = client_dict['face_type']
             self.max_faces_from_image = client_dict['max_faces_from_image']
+            self.num_gpu_sessions     = client_dict['num_gpu_sessions']
             self.device_idx           = client_dict['device_idx']
             self.cpu_only             = client_dict['device_type'] == 'CPU'
             self.final_output_path    = client_dict['final_output_path']
             self.output_debug_path    = client_dict['output_debug_path']
+
 
             #transfer and set stdin in order to work code.interact in debug subprocess
             stdin_fd         = client_dict['stdin_fd']
@@ -62,10 +64,11 @@ class ExtractSubprocessor(Subprocessor):
                 place_model_on_cpu = True
             else:
                 device_config = nn.DeviceConfig.GPUIndexes ([self.device_idx])
+                device_config.num_gpu_sessions = self.num_gpu_sessions
                 place_model_on_cpu = device_config.devices[0].total_mem_gb < 4
 
             if self.type == 'all' or 'rects' in self.type or 'landmarks' in self.type:
-                nn.initialize (device_config)
+                nn.initialize(device_config)
 
             self.log_info (f"Running on {client_dict['device_name'] }")
 
@@ -280,19 +283,20 @@ class ExtractSubprocessor(Subprocessor):
            'all'       in type:
 
             if not cpu_only:
+                count = device_config.num_gpu_sessions
                 if type == 'landmarks-manual':
                     devices = [devices.get_best_device()]
+                    count = 1
 
                 result = []
 
                 for device in devices:
-                    count = 1
 
                     if count == 1:
                         result += [ (device.index, 'GPU', device.name, device.total_mem_gb) ]
                     else:
                         for i in range(count):
-                            result += [ (device.index, 'GPU', f"{device.name} #{i}", device.total_mem_gb) ]
+                            result += [ (device.index, 'GPU', f"{device.name} worker #{i}", device.total_mem_gb) ]
 
                 return result
             else:
@@ -321,6 +325,7 @@ class ExtractSubprocessor(Subprocessor):
         self.max_faces_from_image = max_faces_from_image
         self.result = []
 
+        self.num_gpu_sessions = device_config.num_gpu_sessions
         self.devices = ExtractSubprocessor.get_devices_for_config(self.type, device_config)
 
         super().__init__('Extractor', ExtractSubprocessor.Cli,
@@ -369,7 +374,8 @@ class ExtractSubprocessor(Subprocessor):
                      'max_faces_from_image':self.max_faces_from_image,
                      'output_debug_path': self.output_debug_path,
                      'final_output_path': self.final_output_path,
-                     'stdin_fd': sys.stdin.fileno() }
+                     'stdin_fd': sys.stdin.fileno(),
+                     'num_gpu_sessions': self.num_gpu_sessions}
 
 
         for (device_idx, device_type, device_name, device_total_vram_gb) in self.devices:
@@ -408,12 +414,12 @@ class ExtractSubprocessor(Subprocessor):
 
                     (h,w,c) = self.image.shape
 
-                    sh = (0,0, w, min(100, h) )
+                    sh = (0,0, w, min(150, h) )
                     if self.cache_text_lines_img[0] == sh:
                         self.text_lines_img = self.cache_text_lines_img[1]
                     else:
                         self.text_lines_img = (imagelib.get_draw_text_lines ( self.image, sh,
-                                                        [   '[L Mouse click] - lock/unlock selection. [Mouse wheel] - change rect',
+                                                        [   '[L Mouse click] - lock/unlock selection. [W][S] - change rect',
                                                             '[R Mouse Click] - manual face rectangle',
                                                             '[Enter] / [Space] - confirm / skip frame',
                                                             '[,] [.]- prev frame, next frame. [Q] - skip remaining frames',
@@ -533,6 +539,12 @@ class ExtractSubprocessor(Subprocessor):
                         elif key == ord('a'):
                             self.landmarks_accurate = not self.landmarks_accurate
                             break
+                        elif key == ord('w'):
+                            diff = 1 if new_rect_size <= 40 else np.clip(new_rect_size / 10, 1, 10)
+                            new_rect_size = max(5, new_rect_size + diff)
+                        elif key == ord('s'):
+                            diff = 1 if new_rect_size <= 40 else np.clip(new_rect_size / 10, 1, 10)
+                            new_rect_size = max(5, new_rect_size - diff)
 
                         if self.force_landmarks:
                             pt2 = np.float32([new_x, new_y])
@@ -601,8 +613,8 @@ class ExtractSubprocessor(Subprocessor):
         else:
             image = self.image.copy()
 
-        view_rect = (np.array(self.rect) * self.view_scale).astype(np.int).tolist()
-        view_landmarks  = (np.array(self.landmarks) * self.view_scale).astype(np.int).tolist()
+        view_rect = (np.array(self.rect) * self.view_scale).astype(np.int32).tolist()
+        view_landmarks  = (np.array(self.landmarks) * self.view_scale).astype(np.int32).tolist()
 
         if self.rect_size <= 40:
             scaled_rect_size = h // 3 if w > h else w // 3
@@ -715,6 +727,7 @@ def main(detector=None,
          max_faces_from_image=None,
          image_size=None,
          jpeg_quality=None,
+         num_gpu_sessions=None,
          cpu_only = False,
          force_gpu_idxs = None,
          ):
@@ -759,6 +772,10 @@ def main(detector=None,
 
     device_config = nn.DeviceConfig.GPUIndexes( force_gpu_idxs or nn.ask_choose_device_idxs(choose_only_one=detector=='manual', suggest_all_gpu=True) ) \
                     if not cpu_only else nn.DeviceConfig.CPU()
+
+    if num_gpu_sessions is None and not device_config.cpu_only:
+        num_gpu_sessions = nn.ask_multiple_sessions()
+        device_config.num_gpu_sessions = num_gpu_sessions
 
     if face_type is None:
         face_type = io.input_str ("Face type", 'wf', ['f','wf','head'], help_message="Full face / whole face / head. 'Whole face' covers full area of face include forehead. 'head' covers full head, but requires XSeg for src and dst faceset.").lower()

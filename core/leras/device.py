@@ -4,6 +4,7 @@ import os
 import multiprocessing
 import json
 import time
+import contextlib
 from pathlib import Path
 from core.interact import interact as io
 
@@ -98,7 +99,8 @@ class Devices(object):
             if not compute_cache_path.exists():
                 io.log_info("Caching GPU kernels...")
                 compute_cache_path.mkdir(parents=True, exist_ok=True)
-                
+
+
         import tensorflow
         
         tf_version = tensorflow.version.VERSION
@@ -151,7 +153,7 @@ class Devices(object):
                         
         q.put(physical_devices_f)
         time.sleep(0.1)
-        
+
         
     @staticmethod
     def initialize_main_env():

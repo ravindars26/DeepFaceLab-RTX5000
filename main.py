@@ -41,6 +41,7 @@ if __name__ == "__main__":
                         max_faces_from_image    = arguments.max_faces_from_image,
                         image_size              = arguments.image_size,
                         jpeg_quality            = arguments.jpeg_quality,
+                        num_gpu_sessions        = arguments.num_gpu_sessions,
                         cpu_only                = arguments.cpu_only,
                         force_gpu_idxs          = [ int(x) for x in arguments.force_gpu_idxs.split(',') ] if arguments.force_gpu_idxs is not None else None,
                       )
@@ -58,6 +59,7 @@ if __name__ == "__main__":
     p.add_argument('--manual-fix', action="store_true", dest="manual_fix", default=False, help="Enables manual extract only frames where faces were not recognized.")
     p.add_argument('--manual-output-debug-fix', action="store_true", dest="manual_output_debug_fix", default=False, help="Performs manual reextract input-dir frames which were deleted from [output_dir]_debug\ dir.")
     p.add_argument('--manual-window-size', type=int, dest="manual_window_size", default=1368, help="Manual fix window size. Default: 1368.")
+    p.add_argument('--num-gpu-sessions', type=int, dest="num_gpu_sessions", default=None, help="Number of GPU sessions. Default: 1.")
     p.add_argument('--cpu-only', action="store_true", dest="cpu_only", default=False, help="Extract on CPU..")
     p.add_argument('--force-gpu-idxs', dest="force_gpu_idxs", default=None, help="Force to choose GPU indexes separated by comma.")
 
