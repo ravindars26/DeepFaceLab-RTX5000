@@ -18,7 +18,7 @@ class DeepFakeArchi(nn.ArchiBase):
         if opts is None:
             opts = ''
 
-
+        #use_fp16 = True
         conv_dtype = tf.float16 if use_fp16 else tf.float32
         
         if 'c' in opts:

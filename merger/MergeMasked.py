@@ -51,7 +51,7 @@ def MergeMaskedFace (predictor_func, predictor_input_shape,
         prd_face_bgr_enhanced = face_enhancer_func(prd_face_bgr, is_tanh=True, preserve_size=False)
         mod = cfg.super_resolution_power / 100.0
         prd_face_bgr = cv2.resize(prd_face_bgr, (output_size,output_size))*(1.0-mod) + prd_face_bgr_enhanced*mod
-        prd_face_bgr = np.clip(prd_face_bgr, 0, 1)
+        prd_face_bgr = np.clip(prd_face_bgr, 0, 1, dtype=np.float32)
 
     if cfg.super_resolution_power != 0:
         prd_face_mask_a_0     = cv2.resize (prd_face_mask_a_0,      (output_size, output_size), interpolation=cv2.INTER_CUBIC)

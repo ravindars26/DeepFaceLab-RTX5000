@@ -333,4 +333,5 @@ def color_transfer(ct_mode, img_src, img_trg):
         out = np.clip( out, 0.0, 1.0)
     else:
         raise ValueError(f"unknown ct_mode {ct_mode}")
+
     return out

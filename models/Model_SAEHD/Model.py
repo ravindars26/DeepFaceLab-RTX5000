@@ -58,7 +58,7 @@ class SAEHDModel(ModelBase):
         default_face_style_power   = self.options['face_style_power']   = self.load_or_def_option('face_style_power', 0.0)
         default_bg_style_power     = self.options['bg_style_power']     = self.load_or_def_option('bg_style_power', 0.0)
         default_ct_mode            = self.options['ct_mode']            = self.load_or_def_option('ct_mode', 'none')
-        default_clipgrad           = self.options['clipgrad']           = self.load_or_def_option('clipgrad', False)
+        default_clipgrad           = self.options['clipgrad']           = self.load_or_def_option('clipgrad', 0.0)
         default_pretrain           = self.options['pretrain']           = self.load_or_def_option('pretrain', False)
 
         ask_override = self.ask_override()
@@ -173,8 +173,8 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
             self.options['bg_style_power'] = np.clip ( io.input_number("Background style power", default_bg_style_power, add_info="0.0..100.0", help_message="Learn the area outside mask of the predicted face to be the same as dst. If you want to use this option with 'whole_face' you have to use XSeg trained mask. For whole_face you have to use XSeg trained mask. This can make face more like dst. Enabling this option increases the chance of model collapse. Typical value is 2.0"), 0.0, 100.0 )
 
             self.options['ct_mode'] = io.input_str (f"Color transfer for src faceset", default_ct_mode, ['none','rct','lct','mkl','idt','sot'], help_message="Change color distribution of src samples close to dst samples. Try all modes to find the best.")
-            self.options['clipgrad'] = io.input_bool ("Enable gradient clipping", default_clipgrad, help_message="Gradient clipping reduces chance of model collapse, sacrificing speed of training.")
-
+            #self.options['clipgrad'] = io.input_bool ("Enable gradient clipping", default_clipgrad, help_message="Gradient clipping reduces chance of model collapse, sacrificing speed of training.")
+            self.options['clipgrad'] = np.clip(io.input_number ("Enable gradient clipping", default_clipgrad, add_info="0 = disabled, >0 = enabled ", help_message="Gradient clipping reduces chance of model collapse, sacrificing speed of training.\n DFL-RTX5000 changes this option from n/y to 0-1 scale. More info in section 'changes and fixes' at https://github.com/volnas10/DeepFaceLab-RTX5000."), 0.0, 1.0)
             self.options['pretrain'] = io.input_bool ("Enable pretraining mode", default_pretrain, help_message="Pretrain the model with large amount of various faces. After that, model can be used to train the fakes more quickly. Forces random_warp=N, random_flips=Y, gan_power=0.0, lr_dropout=N, styles=0.0, uniform_yaw=Y")
 
         if self.options['pretrain'] and self.get_pretraining_data_path() is None:
@@ -571,7 +571,7 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
 
 
             # Initializing training and view functions
-            def src_dst_train(warped_src, target_src, target_srcm, target_srcm_em,  \
+            def src_dst_train(warped_src, target_src, target_srcm, target_srcm_em,
                               warped_dst, target_dst, target_dstm, target_dstm_em, ):
                 s, d = nn.tf_sess.run ( [ src_loss, dst_loss, src_dst_loss_gv_op],
                                             feed_dict={self.warped_src :warped_src,
@@ -592,7 +592,7 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
                 self.D_train = D_train
 
             if gan_power != 0:
-                def D_src_dst_train(warped_src, target_src, target_srcm, target_srcm_em,  \
+                def D_src_dst_train(warped_src, target_src, target_srcm, target_srcm_em,
                                     warped_dst, target_dst, target_dstm, target_dstm_em, ):
                     nn.tf_sess.run ([src_D_src_dst_loss_gv_op], feed_dict={self.warped_src :warped_src,
                                                                            self.target_src :target_src,
@@ -669,8 +669,10 @@ Examples: df, liae, df-d, df-ud, liae-ud, ...
             cpu_count = multiprocessing.cpu_count()
             src_generators_count = cpu_count // 2
             dst_generators_count = cpu_count // 2
-            if ct_mode is not None:
-                src_generators_count = int(src_generators_count * 1.5)
+
+            # Causes crashes in some cases
+            # if ct_mode is not None:
+            #    src_generators_count = int(src_generators_count * 1.5)
 
             self.set_training_data_generators ([
                     SampleGeneratorFace(training_data_src_path, random_ct_samples_path=random_ct_samples_path, debug=self.is_debug(), batch_size=self.get_batch_size(),

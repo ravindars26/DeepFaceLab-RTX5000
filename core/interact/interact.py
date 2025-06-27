@@ -457,7 +457,7 @@ class InteractDesktop(InteractBase):
         cv2.destroyAllWindows()
 
     def on_create_window (self, wnd_name):
-        cv2.namedWindow(wnd_name)
+        cv2.namedWindow(wnd_name, cv2.WINDOW_AUTOSIZE | cv2.WINDOW_GUI_NORMAL)
 
     def on_destroy_window (self, wnd_name):
         cv2.destroyWindow(wnd_name)

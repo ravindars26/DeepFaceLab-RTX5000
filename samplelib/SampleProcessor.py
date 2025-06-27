@@ -197,8 +197,8 @@ class SampleProcessor(object):
                             h_amount = max(1, int(360*a*0.5))
                             img_h, img_s, img_v = cv2.split(cv2.cvtColor(img, cv2.COLOR_BGR2HSV))
                             img_h = (img_h + rnd_state.randint(-h_amount, h_amount+1) ) % 360
-                            img_s = np.clip (img_s + (rnd_state.random()-0.5)*a, 0, 1 )
-                            img_v = np.clip (img_v + (rnd_state.random()-0.5)*a, 0, 1 )
+                            img_s = np.clip (img_s + (rnd_state.random()-0.5)*a, 0, 1, dtype=np.float32)
+                            img_v = np.clip (img_v + (rnd_state.random()-0.5)*a, 0, 1, dtype=np.float32)
                             img = np.clip( cv2.cvtColor(cv2.merge([img_h, img_s, img_v]), cv2.COLOR_HSV2BGR) , 0, 1 )
 
                         img  = imagelib.warp_by_params (warp_params, img,  warp, transform, can_flip=True, border_replicate=border_replicate)

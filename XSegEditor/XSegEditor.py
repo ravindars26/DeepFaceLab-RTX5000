@@ -512,7 +512,7 @@ class QCanvasOperator(QWidget):
         tl = QPoint_to_np(rect.topLeft())
         xy = self.img_to_cli_pt(tl)
         xy2 = self.img_to_cli_pt(tl + QSize_to_np(rect.size()) ) - xy
-        return QRect ( *xy.astype(np.int), *xy2.astype(np.int) )
+        return QRect ( *xy.astype(int), *xy2.astype(int) )
 
     # ====================================================================================
     # ====================================================================================
@@ -1061,8 +1061,13 @@ class QCanvasOperator(QWidget):
                     qp.setPen(color_scheme.poly_outline_solid_pen)
                     qp.setBrush(QBrush())
 
-                    qp.drawLine( *(pt_remove_cli_pt + np.float32([-pt_rad_x2,-pt_rad_x2])), *(pt_remove_cli_pt + np.float32([pt_rad_x2,pt_rad_x2])) )
-                    qp.drawLine( *(pt_remove_cli_pt + np.float32([-pt_rad_x2,pt_rad_x2])), *(pt_remove_cli_pt + np.float32([pt_rad_x2,-pt_rad_x2])) )
+                    p1 = QPointF(*(pt_remove_cli_pt + np.float32([-pt_rad_x2, -pt_rad_x2])))
+                    p2 = QPointF(*(pt_remove_cli_pt + np.float32([pt_rad_x2, pt_rad_x2])))
+                    qp.drawLine(p1, p2)
+
+                    p3 = QPointF(*(pt_remove_cli_pt + np.float32([-pt_rad_x2, pt_rad_x2])))
+                    p4 = QPointF(*(pt_remove_cli_pt + np.float32([pt_rad_x2, -pt_rad_x2])))
+                    qp.drawLine(p3, p4)
 
         qp.end()
 

@@ -294,6 +294,7 @@ if __name__ == "__main__":
     p = xseg_parser.add_parser( "editor", help="XSeg editor.")
 
     def process_xsegeditor(arguments):
+        os.environ.pop("QT_QPA_PLATFORM_PLUGIN_PATH")
         osex.set_process_lowest_prio()
         from XSegEditor import XSegEditor
         global exit_code
