@@ -60,7 +60,9 @@ cd DeepFaceLab-RTX5000/_internal
 sudo chmod +x update.sh
 ./update.sh
 ```
-Since there haven't been any updates yet, the functionality of this script is not confirmed so you might need to download a newer update script in the future.
+Since there haven't been any updates yet, the functionality of this script is not confirmed so you might need to download a newer update script in the future.  
+This version uses [custom TensorFlow build](https://github.com/weyn9q/rtx5070tensorflow) since the official TensorFlow still doesn't support RTX 5000 GPUs. If I change it to the official build in the future, there is a high chance a fresh install of this repository will be required.
+
 
 ## How to use
 Usage is basically the same as in the original DFL. But obviously you will be working in a Linux environment now.
