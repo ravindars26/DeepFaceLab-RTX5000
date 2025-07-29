@@ -14,7 +14,7 @@ python "$DFL_ROOT/main.py" videoed video-from-sequence \
     --include-audio
 
 python "$DFL_ROOT/main.py" videoed video-from-sequence \
-    --input-dir "$WORKSPACE/data_dst/merged" \
+    --input-dir "$WORKSPACE/data_dst/merged_mask" \
     --output-file "$WORKSPACE/result_mask.avi" \
     --reference-file "$WORKSPACE/data_dst.*" \
     --lossless
