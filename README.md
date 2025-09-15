@@ -116,4 +116,4 @@ If issues persist, try running ```nvidia-smi``` comand in Windows terminal.
 The second table that appears will show all the processes using the GPU, try shutting them down to see if it helps.
 
 ### Small preview windows on high resolution monitors
-I couldn't find a working solution for this. If you manage to enable high DPI scaling, please let me know how in the issues.
+See [this issue](https://github.com/volnas10/DeepFaceLab-RTX5000/issues/1) for a workaround. Note that if you edit the code and want to update DFL later, your edits will be lost.
