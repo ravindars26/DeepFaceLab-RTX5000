@@ -1,31 +1,23 @@
-# DeepFaceLab-RTX5000
+# DeepFaceLab-RTX5000 (spacial thanks for users: iperov & volnas10)
 ### Forked from https://github.com/iperov/DeepFaceLab
 This fork also fixes some issues that might occur in the original repository.  
 If you don't have any issues with the original DFL, you don't need to use this fork. See [changes and fixes](#new-features-and-fixes) section to see if this version might be of use to you.
 
 ## Installation
-Tensorflow doesn't support Windows anymore, therefore you need to use WSL2 (Windows Subsystem for Linux) to run DeepFaceLab now.
+Tensorflow doesn't support anymore.
 
-The setup script is meant for a fresh WSL installation. It will install everything you need to run DeepFaceLab on new GPUs.
-If you aren't familiar with WSL/Linux and don't know how to use a terminal, don't worry, visit the [how to use section](#how-to-use) for a brief guide.
 
-### 1. Install WSL2 (Ubuntu 24.04)
-1. Open PowerShell as Administrator and run the following command:
-   ```powershell
-   wsl --install -d Ubuntu-24.04
-   ```
-   If the command doesn't work, you might have it disabled in Windows features. Most YouTube tutorials will show you what to do.  
-2. After installation, the Ubuntu app should appear in your search. Opening it will show a terminal and prompt you to create a new user.  
+1. Open the linux terminal  
 
-3. Open the Ubuntu app and run the following command to update the system:
+3. Run the following command to update the system:
    ```bash
    sudo apt update && sudo apt upgrade -y
    ```
-### 2. Install DeepFaceLab-RTX5000
+### 2. Install DeepFaceLab-RTX5000-series
 Continuing in the Ubuntu terminal, run the following commands.
 1. Clone this repository:
    ```bash
-   git clone https://github.com/volnas10/DeepFaceLab-RTX5000.git
+   git clone https://github.com/ravindars26/DeepFaceLab-RTX5000.git
     ```
 2. Navigate to the cloned repository and run the setup script:
    ```bash
@@ -71,6 +63,7 @@ Usage is basically the same as in the original DFL. But obviously you will be wo
     Linux/Ubuntu/home/your_username/DeepFaceLab-RTX5000/workspace
     ```
 2. To run the scripts, double-clicking won't work. You need to run them from the terminal. Here are the commands you will use:
+   use this video tutorial as refrence: https://youtu.be/zl6Kyr3WosE?si=r7fGUMA7MPFXHQ-w&t=276
    ```bash
    # Change to the directory with scripts:
    cd DeepFaceLab-RTX5000
