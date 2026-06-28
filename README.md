@@ -25,7 +25,11 @@ Continuing in the Ubuntu terminal, run the following commands.
 3. Navigate to the cloned repository and run the setup script:
    ```bash
    cd DeepFaceLab-RTX5000
+   ```
+   ```bash
    sudo chmod +x setup.sh
+   ```
+   ```bash
    ./setup.sh
    ```
 4. The setup script will automatically do the following:
@@ -35,33 +39,20 @@ Continuing in the Ubuntu terminal, run the following commands.
     - Download XnView
     - Install all required Python packages
    
-### 3. (Optional) Manually copy needed files from the original DFL
-1. If you plan on using the Generic XSeg masks, copy the
-`DeepFaceLab_NVIDIA_RTX3000_series/_internal/model_generic_xseg` folder to the
-`DeepFaceLab-RTX5000/_internal/` folder.
 
-2. If you want to pretrain a model with the original dataset, copy
-`DeepFaceLab_NVIDIA_RTX3000_series/_internal/pretrain_faces` folder to the
-`DeepFaceLab-RTX5000/_internal/` folder.
-
-3. If you use Quick96, copy the
-`DeepFaceLab_NVIDIA_RTX3000_series/_internal/pretrain_Quick96` folder to the
-`DeepFaceLab-RTX5000/_internal/` folder.
-
-## Updating
 You can check if there are any updates to this repository by using the update.sh script:
 ```bash
 cd DeepFaceLab-RTX5000/_internal
 sudo chmod +x update.sh
 ./update.sh
 ```
-Since there haven't been any updates yet, the functionality of this script is not confirmed so you might need to download a newer update script in the future.  
+  
 This version uses [custom TensorFlow build](https://github.com/weyn9q/rtx5070tensorflow) since the official TensorFlow still doesn't support RTX 5000 GPUs. If I change it to the official build in the future, there is a high chance a fresh install of this repository will be required.
 
 
 ## How to use
 Usage is basically the same as in the original DFL. But obviously you will be working in a Linux environment now.
-1. You can move your dataset using Windows Explorer. The workspace folder will be located in:
+1. You can move your dataset using File Explorer. The workspace folder will be located in:
     ```
     Linux/Ubuntu/home/your_username/DeepFaceLab-RTX5000/workspace
     ```
