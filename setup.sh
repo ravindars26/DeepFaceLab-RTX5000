@@ -83,8 +83,36 @@ echo "-------------------------------------------------------"
 ./venv/bin/pip install --upgrade pip
 ./venv/bin/pip install --no-deps -r requirements.txt
 cd ../../
+
+# Download pretrain models and genericXseg
+echo "-------------------------------------------------------"
+echo "Downloading pretrain models and genericXseg"
+echo "-------------------------------------------------------"
+cd _internal/
+wget https://github.com/deepartist/DeepFaceLab_Colab/releases/download/1.0.0/{genericXseg.zip,pretrain_FFHQ.zip,pretrain_Quick96.zip}
+
+# Extract all zip files into the current directory (_internal)
+unzip -o \*.zip
+ls -l
+
+# Clean up the zip files
+rm genericXseg.zip pretrain_FFHQ.zip pretrain_Quick96.zip
+
+# Return to root directory
+cd ..
+
+# Create workspace directory and its subfolders
+echo "-------------------------------------------------------"
+echo "Creating workspace directories"
+echo "-------------------------------------------------------"
+mkdir -p workspace
+mkdir -p workspace/data_dst
+mkdir -p workspace/data_src
+mkdir -p workspace/model
+
+# Move setup.sh to DFL_DIR
 mv "setup.sh" "$DFL_DIR/"
 
 echo "-------------------------------------------------------"
 echo "FINISHED"
-echo "Don't forget to copy necessary folders from the original DFL if you need them"
+echo "EveryThing is loaded, just put data_src.mp4 and data_dst.mp4 file inside workspace folder and you are good to go...  "
