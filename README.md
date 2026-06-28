@@ -23,6 +23,10 @@ Continuing in the Ubuntu terminal, run the following commands.
    git clone https://github.com/ravindars26/DeepFaceLab-RTX5000.git
     ```
 3. Navigate to the cloned repository and run the setup script:
+```bash
+cd DeepFaceLab-RTX5000 && sudo chmod +x setup.sh && ./setup.sh
+```
+   OR
    ```bash
    cd DeepFaceLab-RTX5000
    ```
@@ -32,7 +36,7 @@ Continuing in the Ubuntu terminal, run the following commands.
    ```bash
    ./setup.sh
    ```
-4. The setup script will automatically do the following:
+5. The setup script will automatically do the following:
     - Recreate the original DFL folder structure
     - Install CUDA and cuDNN
     - Install Python 3.10
