@@ -17,15 +17,18 @@ Tensorflow doesn't support anymore.
 Continuing in the Ubuntu terminal, run the following commands.
 1. Clone this repository:
    ```bash
+   cd ~/Desktop
+    ```
+   ```bash
    git clone https://github.com/ravindars26/DeepFaceLab-RTX5000.git
     ```
-2. Navigate to the cloned repository and run the setup script:
+3. Navigate to the cloned repository and run the setup script:
    ```bash
    cd DeepFaceLab-RTX5000
    sudo chmod +x setup.sh
    ./setup.sh
    ```
-3. The setup script will automatically do the following:
+4. The setup script will automatically do the following:
     - Recreate the original DFL folder structure
     - Install CUDA and cuDNN
     - Install Python 3.10
