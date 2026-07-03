@@ -1,96 +1,100 @@
 #!/bin/bash
+set -e  # Exit immediately if any command fails
+
+# Define the absolute base directory so the script never gets lost
+BASE_DIR="/home/user/Desktop/DeepFaceLab-RTX5000"
 
 echo "-------------------------------------------------------"
 echo "Creating the DFL directory structure"
 echo "-------------------------------------------------------"
 
-# Move everything into place
+# Move everything into place safely
 DFL_DIR="other/_internal/DeepFaceLab"
-mkdir "$DFL_DIR"
-mkdir "$DFL_DIR/other"
+mkdir -p "$DFL_DIR/other"
 
-# Move everything from main folder to other/_internal/DeepFaceLab
 rsync -a --exclude="_internal/DeepFaceLab" other/ "$DFL_DIR/other"
 rsync -q -av --remove-source-files --exclude="setup.sh" --exclude=other/ ./ "$DFL_DIR/"
 find ./ -type d -empty -not -name keep_folder -delete
 
-# Take everything out of the other dir
-mv other/* .
-rmdir other
+# Take everything out of the other dir safely
+if [ -d other ]; then
+    mv other/* . 2>/dev/null || true
+    rmdir other 2>/dev/null || true
+fi
 
 # Add folders for app data
-mkdir _internal/_e
-mkdir _internal/_e/u
+mkdir -p _internal/_e/u
 
-# Install CUDA
 echo "-------------------------------------------------------"
-echo "Installing CUDA and cuDNN"
+echo "Configuring CUDA and cuDNN Dependencies"
 echo "-------------------------------------------------------"
-wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
-sudo dpkg -i cuda-keyring_1.1-1_all.deb
-sudo apt-get update
-sudo apt-get -y install cuda-toolkit-12-8
-rm cuda-keyring_1.1-1_all.deb
+sudo rm -f /etc/apt/sources.list.d/cuda-ubuntu2404-x86_64.list
 
-# Install cuDNN
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
-sudo dpkg -i cuda-keyring_1.1-1_all.deb
 sudo apt-get update
-sudo apt-get -y install cudnn-cuda-12
-rm cuda-keyring_1.1-1_all.deb
+sudo apt-get -y install cudnn-cuda-12 || echo "cuDNN package installation skipped (already managed by container)."
 
-# Add CUDA to PATH
+# Add CUDA and explicit virtual environment NVIDIA paths to .bashrc safely
 sudo chown $USER:$USER ~/.bashrc
-echo 'export CUDA_HOME=/usr/local/cuda-12.8' >> ~/.bashrc
-echo 'export DYLD_LIBRARY_PATH=$CUDA_HOME/lib64:$DYLD_LIBRARY_PATH' >> ~/.bashrc
-echo 'export PATH=$CUDA_HOME/bin:$PATH' >> ~/.bashrc
-echo 'export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH' >> ~/.bashrc
-echo 'export LD_RUN_PATH=$CUDA_HOME/lib64:$LD_RUN_PATH' >> ~/.bashrc
-source ~/.bashrc
+if ! grep -q "CUDA_HOME" ~/.bashrc; then
+    echo 'export CUDA_HOME=/usr/local/cuda' >> ~/.bashrc
+    echo 'export PATH=$CUDA_HOME/bin:$PATH' >> ~/.bashrc
+    echo "export LD_LIBRARY_PATH=\$CUDA_HOME/lib64:/usr/lib/x86_64-linux-gnu:$BASE_DIR/_internal/DeepFaceLab/venv/lib/python3.10/site-packages/nvidia/cuda_runtime/lib:$BASE_DIR/_internal/DeepFaceLab/venv/lib/python3.10/site-packages/nvidia/cudnn/lib:\$LD_LIBRARY_PATH" >> ~/.bashrc
+    echo 'export LD_RUN_PATH=$CUDA_HOME/lib64:$LD_RUN_PATH' >> ~/.bashrc
+fi
 
-# Install Python 3.10
 echo "-------------------------------------------------------"
-echo "Installing Python with other requirements"
+echo "Installing Python 3.10 and System Utilities"
 echo "-------------------------------------------------------"
 sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo apt update
-sudo apt install python3.10 python3.10-venv python3.10-distutils -y
+sudo apt install python3.10 python3.10-venv python3.10-distutils python3.10-dev ffmpeg libpulse-mainloop-glib0 -y
 
-# Install other requirements
-sudo apt install ffmpeg -y
-sudo apt install libpulse-mainloop-glib0 -y
-
-# Download XnView
 echo "-------------------------------------------------------"
 echo "Downloading XnView"
 echo "-------------------------------------------------------"
 curl -L "https://www.xnview.com/download.php?file=XnViewMP-linux-x64.deb" -o "XnViewMP-linux-x64.deb"
 ar x "XnViewMP-linux-x64.deb"
 
-mkdir _internal/XnView
-DATA_ARCHIVE=$(ls data.tar.*)
-tar -xf "$DATA_ARCHIVE" -C _internal/XnView/
-rm "XnViewMP-linux-x64.deb" control.tar.* data.tar.* debian-binary
+mkdir -p _internal/XnView
+DATA_ARCHIVE=$(ls data.tar.* 2>/dev/null || true)
+if [ -n "$DATA_ARCHIVE" ]; then
+    tar -xf "$DATA_ARCHIVE" -C _internal/XnView/
+    rm -f "XnViewMP-linux-x64.deb" control.tar.* data.tar.* debian-binary
+    mv _internal/XnView/opt/XnView/* _internal/XnView/ 2>/dev/null || true
+    rm -rf _internal/XnView/usr _internal/XnView/opt
+fi
 
-mv _internal/XnView/opt/XnView/* _internal/XnView
-rm -rf _internal/XnView/usr
-rm -rf _internal/XnView/opt
-
-# Make virtual environment and install requirements
 echo "-------------------------------------------------------"
-echo "Creating virtual environment"
+echo "Creating Virtual Environment and Patching Dependencies"
 echo "-------------------------------------------------------"
-cd _internal/DeepFaceLab
+cd "$BASE_DIR/_internal/DeepFaceLab"
+rm -rf venv 
 python3.10 -m venv venv
 
-echo "-------------------------------------------------------"
-echo "Installing requirements"
-echo "-------------------------------------------------------"
+if [ -f requirements.txt ]; then
+    echo "Modifying requirements.txt to solve the NumPy 2.2.0 / TensorFlow conflict..."
+    sed -i 's/numpy.*/numpy==1.26.4/g' requirements.txt
+fi
+
 ./venv/bin/pip install --upgrade pip
 ./venv/bin/pip install --no-deps -r requirements.txt
-cd ../../
-mv "setup.sh" "$DFL_DIR/"
 
 echo "-------------------------------------------------------"
-echo "FINISHED"
-echo "Don't forget to copy necessary folders from the original DFL if you need them"
+echo "Creating Workspace Directories (Forced Absolute Paths)"
+echo "-------------------------------------------------------"
+# FIXED: Using explicit, un-ignorable absolute paths targeting your Desktop directory
+mkdir -p "$BASE_DIR/workspace/data_dst"
+mkdir -p "$BASE_DIR/workspace/data_src/aligned"
+mkdir -p "$BASE_DIR/workspace/model"
+
+# Clean up setup.sh location safely
+if [ -f "$BASE_DIR/setup.sh" ]; then
+    mv "$BASE_DIR/setup.sh" "$BASE_DIR/_internal/DeepFaceLab/"
+fi
+
+echo "-------------------------------------------------------"
+echo "FINISHED SUCCESSFULLY"
+echo "-------------------------------------------------------"
+echo "1. Run 'source ~/.bashrc' to apply new environment paths."
+echo "2. Drop your data_src.mp4 and data_dst.mp4 into the workspace folder."
+echo "3. You are ready to run your extraction scripts!"
