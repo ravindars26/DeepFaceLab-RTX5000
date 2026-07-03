@@ -1,4 +1,4 @@
-# DeepFaceLab-RTX5000 (spacial thanks for users: iperov & volnas10)
+# DeepFaceLab-RTX5000 For Vast.AI Linux Cantainer(spacial thanks for users: iperov & volnas10)
 ### Forked from https://github.com/iperov/DeepFaceLab
 This fork also fixes some issues that might occur in the original repository.  
 If you don't have any issues with the original DFL, you don't need to use this fork. See [changes and fixes](#new-features-and-fixes) section to see if this version might be of use to you.
@@ -11,7 +11,7 @@ Tensorflow doesn't support anymore.
 
 3. Run the following command to update the system:
    ```bash
-   sudo apt update && sudo apt upgrade -y
+   sudo apt update && sudo apt upgrade -y && pip3 install gdown
    ```
 ### 2. Install DeepFaceLab-RTX5000-series
 Continuing in the Ubuntu terminal, run the following commands.
@@ -50,7 +50,46 @@ cd DeepFaceLab-RTX5000/_internal
 sudo chmod +x update.sh
 ./update.sh
 ```
-  
+Workspace directory
+```bash
+  mkdir -p workspace/data_dst workspace/data_src/aligned workspace/model
+```
+##Update:
+Over the last years, the main Python ecosystem updated. Packages like numpy and protobuf released brand new versions (like NumPy 2.2.0).
+When you downloaded the updated script today, its requirements.txt file was told to fetch these brand-new versions. However, the custom, pre-built TensorFlow wheel inside DeepFaceLab was built to expect slightly older versions.
+This created a hard dependency conflict. pip looked at the rules, realized it couldn't satisfy both the new requirements and the old TensorFlow at the same time, and completely crashed.
+
+#Solution
+Move to the internal folder and activate the environment
+```bash
+cd /home/user/Desktop/DeepFaceLab-RTX5000/_internal/DeepFaceLab
+python3.10 -m venv venv
+source venv/bin/activate
+```
+Patch NumPy and force-install core requirements
+```bash
+sed -i 's/numpy.*/numpy==1.26.4/g' requirements.txt
+pip install --no-deps -r requirements.txt
+```
+Install ALL 9 NVIDIA packages together
+```bash
+pip install nvidia-cuda-runtime-cu12 nvidia-cudnn-cu12 nvidia-cublas-cu12 nvidia-cuda-cupti-cu12 nvidia-cufft-cu12 nvidia-curand-cu12 nvidia-cusolver-cu12 nvidia-cusparse-cu12 nvidia-nvjitlink-cu12
+```
+Dynamically link all the new paths together
+```bash
+export LD_LIBRARY_PATH=$(find $PWD/venv/lib/python3.10/site-packages/nvidia -type d -name lib 2>/dev/null | tr '\n' ':')$LD_LIBRARY_PATH
+```
+Verify TensorFlow can finally see your RTX 5000 GPU
+```bash
+python -c "import tensorflow as tf; print('\n>>> GPUS FOUND: ', tf.config.list_physical_devices('GPU'))"
+```
+Back out to the root directory and launch face extraction and training
+```
+cd ../../
+source 'Enter the script here'
+#Example: source '5) data_dst faceset extract.sh'
+```
+
 This version uses [custom TensorFlow build](https://github.com/weyn9q/rtx5070tensorflow) since the official TensorFlow still doesn't support RTX 5000 GPUs. If I change it to the official build in the future, there is a high chance a fresh install of this repository will be required.
 
 
