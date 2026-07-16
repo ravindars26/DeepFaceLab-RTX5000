@@ -50,9 +50,10 @@ sudo apt update
 sudo apt install python3.10 python3.10-venv python3.10-distutils python3.10-dev ffmpeg libpulse-mainloop-glib0 -y
 
 echo "-------------------------------------------------------"
-echo "Downloading XnView"
+echo "Downloading XnView (SourceForge Global Mirror Network)"
 echo "-------------------------------------------------------"
-curl -L "https://www.xnview.com/download.php?file=XnViewMP-linux-x64.deb" -o "XnViewMP-linux-x64.deb"
+# Pulls from a high-speed global mirror network
+curl -L "https://sourceforge.net/projects/xnview-mp/files/XnViewMP-linux-x64.deb/download" -o "XnViewMP-linux-x64.deb"
 ar x "XnViewMP-linux-x64.deb"
 
 mkdir -p _internal/XnView
@@ -64,20 +65,33 @@ if [ -n "$DATA_ARCHIVE" ]; then
     rm -rf _internal/XnView/usr _internal/XnView/opt
 fi
 
+
 echo "-------------------------------------------------------"
 echo "Creating Virtual Environment and Patching Dependencies"
 echo "-------------------------------------------------------"
 cd "$BASE_DIR/_internal/DeepFaceLab"
-rm -rf venv 
+rm -rf venv
 python3.10 -m venv venv
 
-if [ -f requirements.txt ]; then
-    echo "Modifying requirements.txt to solve the NumPy 2.2.0 / TensorFlow conflict..."
-    sed -i 's/numpy.*/numpy==1.26.4/g' requirements.txt
+# DYNAMIC FIX: If a previous aborted run misplaced requirements.txt, find it automatically
+if [ ! -f requirements.txt ]; then
+    echo "requirements.txt not found in local directory. Searching project tree..."
+    REQ_PATH=$(find "$BASE_DIR" -name "requirements.txt" ! -path "*/venv/*" -print -quit)
+    if [ -n "$REQ_PATH" ]; then
+        echo "Found requirements.txt at: $REQ_PATH. Restoring it to the correct location..."
+        cp "$REQ_PATH" ./requirements.txt
+    else
+        echo "ERROR: requirements.txt cannot be found anywhere in $BASE_DIR."
+        exit 1
+    fi
 fi
+
+echo "Modifying requirements.txt to solve the NumPy 2.2.0 / TensorFlow conflict..."
+sed -i 's/numpy.*/numpy==1.26.4/g' requirements.txt
 
 ./venv/bin/pip install --upgrade pip
 ./venv/bin/pip install --no-deps -r requirements.txt
+
 
 echo "-------------------------------------------------------"
 echo "Creating Workspace Directories (Forced Absolute Paths)"
